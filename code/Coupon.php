@@ -14,7 +14,8 @@ class Coupon extends DataObject implements PermissionProvider {
 		'Title' => 'Varchar',
 		'Code' => 'Varchar',
 		'Discount' => 'Decimal(18,2)',
-		'Expiry' => 'Date'
+		'Expiry' => 'Date',
+		'Priority' => 'Int'
 	);
 	
 	/**
@@ -75,7 +76,8 @@ class Coupon extends DataObject implements PermissionProvider {
 					NumericField::create('Discount', _t('Coupon.DISCOUNT', 'Coupon discount'))
 						->setRightTitle('As a percentage (%)'),
 					DateField::create('Expiry')
-						->setConfig('showcalendar', true)
+						->setConfig('showcalendar', true),
+					TextField::create('Priority', 'Coupon Priority')->setRightTitle('The coupon with the highest priority is applied.')
 				)
 			)
 		);
@@ -101,9 +103,7 @@ class Coupon extends DataObject implements PermissionProvider {
 	}
 
 	public function Amount($order) {
-
 		// TODO: Multi currency
-
 		$shopConfig = ShopConfig::current_shop_config();
 
 		$amount = new Price();
@@ -113,8 +113,8 @@ class Coupon extends DataObject implements PermissionProvider {
 		$total = $order->SubTotal()->getAmount();
 		$mods = $order->TotalModifications();
 
-		if ($mods && $mods->exists()) foreach ($mods as $mod) {
-			if ($mod->ClassName != 'CouponModification') {
+		if($mods && $mods->exists()) foreach ($mods as $mod) {
+			if($mod->ClassName != 'CouponModification') {
 				$total += $mod->Amount()->getAmount();
 			}
 		}
@@ -128,8 +128,7 @@ class Coupon extends DataObject implements PermissionProvider {
 	 * 
 	 * @return Price
 	 */
-	public function Price($order) {
-		
+	public function Price($order) {		
 		$amount = $this->Amount($order);
 		$this->extend('updatePrice', $amount);
 		return $amount;
@@ -184,7 +183,7 @@ class Coupon_Admin extends ShopAdmin {
 		if ($items->count() > 1) $items->remove($items->pop());
 
 		$items->push(new ArrayData(array(
-			'Title' => 'Coupon Settings',
+			'Title' => 'Coupon Management',
 			'Link' => $this->Link(Controller::join_links($this->sanitiseClassName($this->modelClass), 'Coupon'))
 		)));
 
@@ -271,7 +270,7 @@ class Coupon_Admin extends ShopAdmin {
 		$config = ShopConfig::get()->First();
 		$form->saveInto($config);
 		$config->write();
-		$form->sessionMessage('Saved Coupon Settings', 'good');
+		$form->sessionMessage('Saved Coupons', 'good');
 
 		$controller = $this;
 		$responseNegotiator = new PjaxResponseNegotiator(
