@@ -99,7 +99,12 @@ class CouponModifierField_Extension extends Extension {
 		} else {
 			if($coupon->OnceOnly == true){
 				$couponCustomers = $coupon->Customers();
-				$couponUsed = ($couponCustomers->count() > 0) ? ($couponCustomers->filter(array('ID' => Member::currentUserID()))->first() ? true : false) : false;
+				$couponUsed = false;
+				if($couponCustomers->count() > 0){
+					if($couponCustomers->filter(array('ID' => Member::currentUserID()))->first()){
+						$couponUsed = true;
+					}
+				}
 				if($couponUsed){
 					$data['errorMessage'] = 'Sorry you can only use this coupon once.';
 				}

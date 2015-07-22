@@ -21,13 +21,8 @@ class CouponModification extends Modification {
 
 		$date = date('Y-m-d');
 		$coupon = Coupon::get()->where("\"Code\" = '$code' AND \"Expiry\" >= '$date'")->first();
-		$couponUsed = false;
-		if($coupon && $coupon->exists() && $coupon->OnceOnly == true){
-			$customerCoupons = $order->Member()->Coupons();
-			$couponUsed = ($customerCoupons->count() > 0) ? ($customerCoupons->filter(array('ID' => $coupon->ID))->first() ? true : false) : false;
-		}
 
-		if($coupon && $coupon->exists() && !$couponUsed) {
+		if($coupon && $coupon->exists()) {
 			// Check the prioirty of the coupon against one already assigned
 			$curcode = Convert::raw2sql($order->CouponCode);
 			$currentCoupon = Coupon::get()->where("\"Code\" = '$curcode' AND \"Expiry\" >= '$date'")->first();
@@ -35,18 +30,31 @@ class CouponModification extends Modification {
 				$coupon = ($coupon->Priority <= $currentCoupon->Priority) ? $currentCoupon : $coupon;
 			}
 
-			//Generate the Modification
-			$mod = new CouponModification();
-			$mod->Price = $coupon->Amount($order)->getAmount();
-			$mod->Currency = $coupon->Currency;
-			$mod->Description = $coupon->Label();
-			$mod->OrderID = $order->ID;
-			$mod->Value = $coupon->ID;
-			$mod->CouponID = $coupon->ID;
-			$mod->write();
+			// Check if the coupon has been used already
+			$couponUsed = false;
+			if($coupon->OnceOnly == true){
+				$couponCustomers = $coupon->Customers();
+				if($couponCustomers->count() > 0){
+					if($couponCustomers->filter(array('ID' => Member::currentUserID()))->first()){
+						$couponUsed = true;
+					}
+				}
+			}
 
-			$order->CouponCode = $coupon->Code;
-			$order->write();
+			if(!$couponUsed){
+				//Generate the Modification
+				$mod = new CouponModification();
+				$mod->Price = $coupon->Amount($order)->getAmount();
+				$mod->Currency = $coupon->Currency;
+				$mod->Description = $coupon->Label();
+				$mod->OrderID = $order->ID;
+				$mod->Value = $coupon->ID;
+				$mod->CouponID = $coupon->ID;
+				$mod->write();
+
+				$order->CouponCode = $coupon->Code;
+				$order->write();
+			}
 		}
 	}
 
