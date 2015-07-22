@@ -14,22 +14,27 @@ class CouponModification extends Modification {
 	public function add($order, $value = null) {
 		//Get valid coupon for this order
 		if($value !== null){
-			$code = Convert::raw2sql($value);	
+			$code = Convert::raw2sql($value);
 		} else {
-			$code = Convert::raw2sql($order->CouponCode);		
+			$code = Convert::raw2sql($order->CouponCode);
 		}
-		
+
 		$date = date('Y-m-d');
 		$coupon = Coupon::get()->where("\"Code\" = '$code' AND \"Expiry\" >= '$date'")->first();
+		$couponUsed = false;
+		if($coupon && $coupon->exists() && $coupon->OnceOnly == true){
+			$customerCoupons = $order->Member()->Coupons();
+			$couponUsed = ($customerCoupons->count() > 0) ? ($customerCoupons->filter(array('ID' => $coupon->ID))->first() ? true : false) : false;
+		}
 
-		if($coupon && $coupon->exists()) {
+		if($coupon && $coupon->exists() && !$couponUsed) {
 			// Check the prioirty of the coupon against one already assigned
 			$curcode = Convert::raw2sql($order->CouponCode);
 			$currentCoupon = Coupon::get()->where("\"Code\" = '$curcode' AND \"Expiry\" >= '$date'")->first();
 			if($currentCoupon && $currentCoupon->exists()) {
-				$coupon = ($coupon->Priority <= $currentCoupon->Priority) ? $currentCoupon : $coupon;	
+				$coupon = ($coupon->Priority <= $currentCoupon->Priority) ? $currentCoupon : $coupon;
 			}
-			
+
 			//Generate the Modification
 			$mod = new CouponModification();
 			$mod->Price = $coupon->Amount($order)->getAmount();
@@ -39,7 +44,7 @@ class CouponModification extends Modification {
 			$mod->Value = $coupon->ID;
 			$mod->CouponID = $coupon->ID;
 			$mod->write();
-			
+
 			$order->CouponCode = $coupon->Code;
 			$order->write();
 		}

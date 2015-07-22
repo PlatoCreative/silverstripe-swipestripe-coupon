@@ -3,10 +3,10 @@
  * Form field that represents {@link CouponRate}s in the Checkout form.
  */
 class CouponModifierField extends ModificationField_Hidden {
-	
+
 	/**
 	 * The amount this field represents e.g: 15% * order subtotal
-	 * 
+	 *
 	 * @var Money
 	 */
 	protected $amount;
@@ -24,10 +24,10 @@ class CouponModifierField extends ModificationField_Hidden {
 	}
 
 	/**
-	 * Update value of the field according to any matching {@link Modification}s in the 
+	 * Update value of the field according to any matching {@link Modification}s in the
 	 * {@link Order}. Useful when the source options have changed, if a matching option cannot
 	 * be found in a Modification then the first option is set at the value (selected).
-	 * 
+	 *
 	 * @param Order $order
 	 */
 	public function updateValue($order, $data) {
@@ -35,8 +35,8 @@ class CouponModifierField extends ModificationField_Hidden {
 	}
 
 	/**
-	 * Ensure that the value is the ID of a valid {@link FlatFeeShippingRate} and that the 
-	 * FlatFeeShippingRate it represents is valid for the Shipping country being set in the 
+	 * Ensure that the value is the ID of a valid {@link FlatFeeShippingRate} and that the
+	 * FlatFeeShippingRate it represents is valid for the Shipping country being set in the
 	 * {@link Order}.
 	 */
 	public function validate($validator){
@@ -45,20 +45,20 @@ class CouponModifierField extends ModificationField_Hidden {
 		return $valid;
 
 	}
-	
+
 	/**
 	 * Set the amount that this field represents.
-	 * 
+	 *
 	 * @param Money $amount
 	 */
 	public function setAmount(Money $amount) {
 		$this->amount = $amount;
 		return $this;
 	}
-	
+
 	/**
 	 * Return the amount for this tax rate for displaying in the {@link CheckoutForm}
-	 * 
+	 *
 	 * @return String
 	 */
 	public function Description() {
@@ -67,7 +67,7 @@ class CouponModifierField extends ModificationField_Hidden {
 
 	/**
 	 * Shipping field modifies {@link Order} sub total by default.
-	 * 
+	 *
 	 * @return Boolean True
 	 */
 	public function modifiesSubTotal() {
@@ -96,6 +96,14 @@ class CouponModifierField_Extension extends Extension {
 
 		if (!$coupon || !$coupon->exists()) {
 			$data['errorMessage'] = 'Coupon is invalid or expired.';
+		} else {
+			if($coupon->OnceOnly == true){
+				$couponCustomers = $coupon->Customers();
+				$couponUsed = ($couponCustomers->count() > 0) ? ($couponCustomers->filter(array('ID' => Member::currentUserID()))->first() ? true : false) : false;
+				if($couponUsed){
+					$data['errorMessage'] = 'Sorry you can only use this coupon once.';
+				}
+			}
 		}
 
 		return json_encode($data);

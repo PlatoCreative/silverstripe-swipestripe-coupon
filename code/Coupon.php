@@ -1,13 +1,13 @@
 <?php
 /**
- * Coupon rates that can be set in {@link SiteConfig}. Several flat rates can be set 
+ * Coupon rates that can be set in {@link SiteConfig}. Several flat rates can be set
  * for any supported shipping country.
  */
 class Coupon extends DataObject implements PermissionProvider {
-	
+
 	/**
 	 * Fields for this tax rate
-	 * 
+	 *
 	 * @var Array
 	 */
 	private static $db = array(
@@ -15,16 +15,21 @@ class Coupon extends DataObject implements PermissionProvider {
 		'Code' => 'Varchar',
 		'Discount' => 'Decimal(18,2)',
 		'Expiry' => 'Date',
+		'OnceOnly' => 'Boolean',
 		'Priority' => 'Int'
 	);
-	
+
 	/**
 	 * Coupon rates are associated with SiteConfigs.
-	 * 
+	 *
 	 * @var unknown_type
 	 */
 	private static $has_one = array(
 		'ShopConfig' => 'ShopConfig'
+	);
+
+	private static $belongs_many_many = array(
+		'Customers' => 'Customer'
 	);
 
 	private static $summary_fields = array(
@@ -60,10 +65,10 @@ class Coupon extends DataObject implements PermissionProvider {
     {
         return Permission::check('EDIT_COUPONS');
     }
-	
+
 	/**
 	 * Field for editing a {@link Coupon}.
-	 * 
+	 *
 	 * @return FieldSet
 	 */
 	public function getCMSFields() {
@@ -73,29 +78,28 @@ class Coupon extends DataObject implements PermissionProvider {
 				$tabMain = new Tab('CouponRate',
 					TextField::create('Title', _t('Coupon.TITLE', 'Title')),
 					TextField::create('Code', _t('Coupon.CODE', 'Code')),
-					NumericField::create('Discount', _t('Coupon.DISCOUNT', 'Coupon discount'))
-						->setRightTitle('As a percentage (%)'),
-					DateField::create('Expiry')
-						->setConfig('showcalendar', true),
+					NumericField::create('Discount', _t('Coupon.DISCOUNT', 'Coupon discount'))->setRightTitle('As a percentage (%)'),
+					DateField::create('Expiry')->setConfig('showcalendar', true),
+					CheckboxField::create('OnceOnly', 'Limit this coupon to one use per user?', 1),
 					TextField::create('Priority', 'Coupon Priority')->setRightTitle('The coupon with the highest priority is applied.')
 				)
 			)
 		);
 	}
-	
+
 	/**
 	 * Label for using on {@link CouponModifierField}s.
-	 * 
+	 *
 	 * @see CouponModifierField
 	 * @return String
 	 */
 	public function Label() {
 		return $this->Title . ' ' . $this->SummaryOfDiscount() . ' discount';
 	}
-	
+
 	/**
 	 * Summary of the current tax rate
-	 * 
+	 *
 	 * @return String
 	 */
 	public function SummaryOfDiscount() {
@@ -125,15 +129,15 @@ class Coupon extends DataObject implements PermissionProvider {
 
 	/**
 	 * Display price, can decorate for multiple currency etc.
-	 * 
+	 *
 	 * @return Price
 	 */
-	public function Price($order) {		
+	public function Price($order) {
 		$amount = $this->Amount($order);
 		$this->extend('updatePrice', $amount);
 		return $amount;
 	}
-	
+
 }
 
 /**
@@ -143,7 +147,7 @@ class Coupon_Extension extends DataExtension {
 
 	/**
 	 * Attach {@link Coupon}s to {@link SiteConfig}.
-	 * 
+	 *
 	 * @see DataObjectDecorator::extraStatics()
 	 */
 	public static $has_many = array(
@@ -214,7 +218,7 @@ class Coupon_Admin extends ShopAdmin {
 					}
 				),
 				$this->response
-			); 
+			);
 			return $responseNegotiator->respond($this->getRequest());
 		}
 
@@ -290,7 +294,7 @@ class Coupon_Admin extends ShopAdmin {
 				}
 			),
 			$this->response
-		); 
+		);
 		return $responseNegotiator->respond($this->getRequest());
 	}
 
@@ -309,18 +313,6 @@ class Coupon_Admin extends ShopAdmin {
 
 }
 
-class Coupon_OrderExtension extends DataExtension {
-
-	/**
-	 * Attach {@link Coupon}s to {@link SiteConfig}.
-	 * 
-	 * @see DataObjectDecorator::extraStatics()
-	 */
-	public static $db = array(
-		'CouponCode' => 'Varchar'
-	);
-}
-
 class Coupon_CheckoutFormExtension extends Extension {
 
 	public function getCouponFields() {
@@ -336,10 +328,9 @@ class Coupon_CheckoutFormExtension extends Extension {
 class Coupon_Field extends TextField {
 
 	public function FieldHolder($properties = array()) {
-		
+
 		Requirements::javascript(THIRDPARTY_DIR . '/jquery/jquery.js');
 		Requirements::javascript('swipestripe-coupon/javascript/CouponModifierField.js');
 		return $this->renderWith('CouponField');
 	}
 }
-
