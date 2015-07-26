@@ -138,6 +138,18 @@ class Coupon extends DataObject implements PermissionProvider {
 		return $amount;
 	}
 
+	public function CouponRedeemed(){
+		if($this->OnceOnly == true){
+			$customers = $this->Customers();
+			if($customers->count() > 0){
+				if($customers->filter(array('ID' => Member::currentUserID()))->first()){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 }
 
 /**

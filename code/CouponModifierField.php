@@ -97,17 +97,8 @@ class CouponModifierField_Extension extends Extension {
 		if (!$coupon || !$coupon->exists()) {
 			$data['errorMessage'] = 'Coupon is invalid or expired.';
 		} else {
-			if($coupon->OnceOnly == true){
-				$couponCustomers = $coupon->Customers();
-				$couponUsed = false;
-				if($couponCustomers->count() > 0){
-					if($couponCustomers->filter(array('ID' => Member::currentUserID()))->first()){
-						$couponUsed = true;
-					}
-				}
-				if($couponUsed){
-					$data['errorMessage'] = 'Sorry you can only use this coupon once.';
-				}
+			if($coupon->CouponRedeemed()){
+				$data['errorMessage'] = 'Sorry you can only use this coupon once.';
 			}
 		}
 

@@ -31,17 +31,7 @@ class CouponModification extends Modification {
 			}
 
 			// Check if the coupon has been used already
-			$couponUsed = false;
-			if($coupon->OnceOnly == true){
-				$couponCustomers = $coupon->Customers();
-				if($couponCustomers->count() > 0){
-					if($couponCustomers->filter(array('ID' => Member::currentUserID()))->first()){
-						$couponUsed = true;
-					}
-				}
-			}
-
-			if(!$couponUsed){
+			if(!$coupon->CouponRedeemed()){
 				//Generate the Modification
 				$mod = new CouponModification();
 				$mod->Price = $coupon->Amount($order)->getAmount();
