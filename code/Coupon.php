@@ -326,21 +326,15 @@ class Coupon_Admin extends ShopAdmin {
 }
 
 class Coupon_CheckoutFormExtension extends Extension {
-
 	public function getCouponFields() {
-
 		$fields = new FieldList();
-		$fields->push(Coupon_Field::create('CouponCode', _t('Coupon.COUPON_CODE_LABEL', 'Enter your coupon code'))
-			->setForm($this->owner)
-		);
+		$fields->push(Coupon_Field::create('CouponCode', _t('Coupon.COUPON_CODE_LABEL', 'Enter your coupon code'))->setForm($this->owner));
 		return $fields;
 	}
 }
 
 class Coupon_Field extends TextField {
-
 	public function FieldHolder($properties = array()) {
-
 		Requirements::javascript(THIRDPARTY_DIR . '/jquery/jquery.js');
 		Requirements::javascript('swipestripe-coupon/javascript/CouponModifierField.js');
 		return $this->renderWith('CouponField');
