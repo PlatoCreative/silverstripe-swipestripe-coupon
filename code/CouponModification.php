@@ -20,12 +20,12 @@ class CouponModification extends Modification {
 		}
 
 		$date = date('Y-m-d');
-		$coupon = Coupon::get()->where("\"Code\" = '$code' AND \"Expiry\" >= '$date'")->first();
+		$coupon = Coupon::get()->filter(array('Code' => $code, 'Expiry:GreaterThanOrEqual' => $date))->first();
 
 		if($coupon && $coupon->exists()) {
 			// Check the prioirty of the coupon against one already assigned
 			$curcode = Convert::raw2sql($order->CouponCode);
-			$currentCoupon = Coupon::get()->where("\"Code\" = '$curcode' AND \"Expiry\" >= '$date'")->first();
+			$currentCoupon = Coupon::get()->filter(array('Code' => $curcode, 'Expiry:GreaterThanOrEqual' => $date))->first();
 			if($currentCoupon && $currentCoupon->exists()) {
 				$coupon = ($coupon->Priority <= $currentCoupon->Priority) ? $currentCoupon : $coupon;
 			}

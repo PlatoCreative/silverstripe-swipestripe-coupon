@@ -10,7 +10,7 @@ class Coupon_OrderExtension extends DataExtension {
 	// extend the after payment
 	function onAfterPayment(){
 		// Associate the coupon with a user to prevent mulitple use
-		$mod = CouponModification::get()->filter(array('OrderID' => $this->owner->ID))->first();//$this->owner->Modifications()->exclude(array('CouponID' => null))->first();
+		$mod = CouponModification::get()->filter(array('OrderID' => $this->owner->ID))->first();
 		$customer = $this->owner->Member();
 
 		if($mod && $mod->exists()){
