@@ -7,7 +7,7 @@ class CouponModification extends Modification {
 	);
 
 	private static $defaults = array(
-		'SubTotalModifier' => false,
+		'SubTotalModifier' => true,
 		'SortOrder' => 200
 	);
 

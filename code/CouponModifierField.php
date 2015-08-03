@@ -62,7 +62,10 @@ class CouponModifierField extends ModificationField_Hidden {
 	 * @return String
 	 */
 	public function Description() {
-		return $this->amount->Nice();
+		$amount = new Price();
+		$amount->setAmount($this->modifier->Price);
+		return $amount->Nice();
+		//return $this->amount->Nice();
 	}
 
 	/**
