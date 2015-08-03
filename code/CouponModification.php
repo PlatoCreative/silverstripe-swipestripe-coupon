@@ -8,7 +8,7 @@ class CouponModification extends Modification {
 
 	private static $defaults = array(
 		'SubTotalModifier' => true,
-		'SortOrder' => 200
+		'SortOrder' => 100
 	);
 
 	public function add($order, $value = null) {
