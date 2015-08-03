@@ -117,11 +117,15 @@ class Coupon extends DataObject implements PermissionProvider {
 		$total = $order->SubTotal()->getAmount();
 		$mods = $order->TotalModifications();
 
+		// Removed so that the coupon is only applied to tax exclusive price
+		/*
 		if($mods && $mods->exists()) foreach ($mods as $mod) {
 			if($mod->ClassName != 'CouponModification') {
 				$total += $mod->Amount()->getAmount();
 			}
 		}
+		*/
+
 		$amount->setAmount(- ($total * ($this->Discount / 100)));
 
 		return $amount;
